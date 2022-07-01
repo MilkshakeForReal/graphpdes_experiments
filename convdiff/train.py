@@ -1,6 +1,6 @@
 import numpy as np
 from collections import namedtuple
-
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -34,11 +34,11 @@ args = Config(
     hs_2=0,
     method="adaptive_heun",  # adams
     rtol=0.0,
-    atol=1.0e-5,
+    atol=1.0e-4,
     device="cuda",
     batch_size=None,  # Use None for full batch
-    lr=0.000001,
-    epochs=10000,
+    lr=1e-6,
+    epochs=200,
     model_path="./models/model_tmp.pth",
     data_path="./data/convdiff_2pi_n3000_t21_train/",
     tb_log_dir="./tb_logs/",
@@ -87,6 +87,7 @@ for epoch in range(args.epochs):
     losses = torch.zeros(len(loader))
     
     for i, dp in enumerate(loader):
+    
         optimizer.zero_grad()
 
         edge_index = dp.edge_index
@@ -97,7 +98,7 @@ for epoch in range(args.epochs):
         F.update_params(params_dict)
 
         options = {
-            'dtype': torch.float64,
+            'dtype': torch.float32,
             # 'first_step': 1.0e-9,
             # 'grid_points': t,
         }
@@ -115,15 +116,15 @@ for epoch in range(args.epochs):
             adjoint_options=adjoint_options,
         )
         y_gt = dp.y.transpose(0, 1).to(device)
-
         loss = loss_fn(y_pd, y_gt.to(device))
         loss.backward()
         optimizer.step()
 
         losses[i] = loss.item()
+
         
     # writer.add_scalar("train_loss/"+str(args), losses.mean(), epoch)
     
-    if epoch % 10 == 0 or epoch == args.epochs - 1:
-        print("epoch {:>5d} | train loss: {:>7.12f}".format(epoch, losses.mean()))
-        torch.save(F.state_dict(), args.model_path)
+        print("epoch {:>5d} | train loss: {:>7.12f}".format(epoch, loss.item()))
+
+torch.save(F.state_dict(), args.model_path)
