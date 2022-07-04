@@ -162,7 +162,7 @@ function generata_dataset(data)
     time_points = size(u,1)
     grid_size = size(u,2)
     u_train = Array{Float32}(undef, (grid_size,time_points, num_samples))
-    u_train[:,:,1] = dropdims(u,dims = 3)'
+    u_train[:,:,1] .= dropdims(u,dims = 3)'
 
     x = data[1]["pos"]
     s, t = data[1]["edge_index"][1,:] .+ 1, data[2]["edge_index"][2,:] .+ 1
@@ -170,7 +170,7 @@ function generata_dataset(data)
 
     graphs = [g]
     for i in 2:num_samples
-        u_train[:,:,i] = dropdims(u,dims = 3)'
+        u_train[:,:,i] .= dropdims(data[i]["y"],dims = 3)'
 
         x_ =  Array{Float32}(data[i]["pos"]')
         s_, t_ = data[i]["edge_index"][1,:] .+ 1, data[i]["edge_index"][2,:] .+ 1

@@ -32,12 +32,12 @@ args = Config(
     d=40,  # 40
     hs_1=60,  # 60
     hs_2=0,
-    method="adaptive_heun",  # adams
+    method="dopri5",  # adams
     rtol=0.0,
-    atol=1.0e-4,
+    atol=1.0e-3,
     device="cuda",
     batch_size=None,  # Use None for full batch
-    lr=1e-6,
+    lr=1e-5,
     epochs=200,
     model_path="./models/model_tmp.pth",
     data_path="./data/convdiff_2pi_n3000_t21_train/",
@@ -74,9 +74,9 @@ if args.batch_size is None:
 else:
     batch_size = args.batch_size
 
-loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
-optimizer = optim.Rprop(F.parameters(), lr=args.lr, step_sizes=(1e-8, 10.))
+optimizer = optim.Rprop(F.parameters(), lr=args.lr)#, step_sizes=(1e-8, 10.))
 loss_fn = nn.MSELoss()
 
 # Training
@@ -116,6 +116,8 @@ for epoch in range(args.epochs):
             adjoint_options=adjoint_options,
         )
         y_gt = dp.y.transpose(0, 1).to(device)
+        print(y_gt)
+        print(y_gt.shape)
         loss = loss_fn(y_pd, y_gt.to(device))
         loss.backward()
         optimizer.step()
